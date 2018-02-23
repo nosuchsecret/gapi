@@ -12,23 +12,22 @@ import (
 
 // Config of server
 type Config struct {
-	HttpAddr        string  /* http server bind address */
-	UdpAddr         string  /* udp server bind address */
-	TcpAddr         string  /* tcp server bind address */
-	UsocketAddr     string  /* usocket server bind address */
+	HttpAddr    string  /* http server bind address */
+	UdpAddr     string  /* udp server bind address */
+	TcpAddr     string  /* tcp server bind address */
+	UsocketAddr string  /* usocket server bind address */
 
-	Location        string  /* handler location */
+	//UdpNFI     string  /* udp server multicast receive interface */
 
-	Log             string  /* log file */
-	Level           string  /* log level */
-	RotateLine      int     /* log rotate line */
-	RotateDaily     bool    /* log rotate daily */
-	RotateMaxBackup int     /* log rotate max backup size */
+	Location    string  /* handler location */
 
-	Pid             string  /* pid file */
+	Log         string  /* log file */
+	Level       string  /* log level */
+	RotateSize  int     /* log rotate line */
+	BackupSize  int     /* log backup size */
 
-	File            string  /* config file */
-	C               *goconf.ConfigFile /* goconfig struct */
+	File        string  /* config file */
+	C           *goconf.ConfigFile /* goconfig struct */
 }
 
 func (conf *Config) SetConf(file string) {
@@ -108,35 +107,19 @@ func (conf *Config) ParseConf() error {
 		conf.Level = "error"
 		fmt.Fprintln(os.Stderr, "[Info] [Default] level not found, use default log level error")
 	}
-	rline, err := conf.C.GetInt64("default", "rotate_line")
+	rsize, err := conf.C.GetInt64("default", "rotate_size")
 	if err != nil {
-		rline = variable.DEFAULT_ROTATE_LINE
-		fmt.Fprintln(os.Stderr, "[Info] [Default] rotate_line not found, use default", rline)
+		rsize = variable.DEFAULT_ROTATE_SIZE
+		fmt.Fprintln(os.Stderr, "[Info] [Default] rotate_size not found, use default", rsize)
 	}
-	conf.RotateLine = int(rline)
+	conf.RotateSize = int(rsize)
 
-	rdaily, err := conf.C.GetBool("default", "rotate_daily")
+	bksize, err := conf.C.GetInt64("default", "backup_size")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "[Info] [Default] rotate_daily not found, use false")
-		conf.RotateDaily = false
-	} else {
-		fmt.Fprintln(os.Stderr, "[Info] [Default] rotate_daily found:", rdaily)
-		conf.RotateDaily = rdaily
+		bksize = variable.DEFAULT_BACKUP_SIZE
+		fmt.Fprintln(os.Stderr, "[Info] [Default] backup_size not found, use default", bksize)
 	}
-
-	rmaxbackup, err := conf.C.GetInt64("default", "rotate_maxbackup")
-	if err != nil {
-		conf.RotateMaxBackup = 999
-	} else {
-		conf.RotateMaxBackup = int(rmaxbackup)
-	}
-
-	pid, err := conf.C.GetString("default", "pid")
-	if err != nil {
-		conf.Pid = ""
-	} else {
-		conf.Pid = pid
-	}
+	conf.BackupSize = int(bksize)
 
 	return nil
 }

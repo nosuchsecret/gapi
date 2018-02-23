@@ -8,7 +8,7 @@ import (
 	"github.com/nosuchsecret/gapi/usocket"
 	"github.com/nosuchsecret/gapi/config"
 	"github.com/nosuchsecret/gapi/errors"
-	"github.com/nosuchsecret/gapi/log"
+	"github.com/nosuchsecret/logger"
 )
 
 // Server is A HTTP server
@@ -28,11 +28,11 @@ type Server struct {
 	ts      *tserver.TcpServer
 	uss     *usocket.UsocketServer
 
-	log     log.Log
+	log     logger.Log
 }
 
 // InitServer inits server
-func InitServer(conf *config.Config, log log.Log) (*Server, error) {
+func InitServer(conf *config.Config, log logger.Log) (*Server, error) {
 	s := &Server{}
 
 	s.log = log

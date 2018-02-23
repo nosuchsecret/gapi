@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 	"net/http"
-	"github.com/nosuchsecret/gapi/log"
+	"github.com/nosuchsecret/logger"
 	"github.com/nosuchsecret/gapi/errors"
 	"github.com/nosuchsecret/gapi/utils"
 	"github.com/nosuchsecret/gapi/server"
@@ -20,13 +20,10 @@ import (
 type apiContext struct {
 	config *config.Config
 	server *server.Server
-	log    log.Log
+	log    logger.Log
 }
 
 var api apiContext
-
-//type TcpHandler func(net.Conn, log.Log)
-//type UdpHandler func([]byte, int, log.Log)
 
 // Run runs program
 func Init(file string) error {
@@ -52,19 +49,8 @@ func Init(file string) error {
 	}
 	api.config = conf
 
-	utils.SignalInit()
-
-	if conf.Pid != "" {
-		err = utils.SetPid(conf.Pid)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "[Error] set pid file failed")
-			time.Sleep(variable.DEFAULT_QUIT_WAIT_TIME)
-			return errors.ParseConfigError
-		}
-	}
-
-    rlog := log.GetLogger(conf.Log, conf.Level, conf.RotateLine, conf.RotateMaxBackup, conf.RotateDaily)
-	if rlog == nil {
+    rlog, err := logger.Init(conf.Log, conf.Level, conf.RotateSize, conf.BackupSize, false)
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "[Error] Init log failed")
 		time.Sleep(variable.DEFAULT_QUIT_WAIT_TIME)
 		return errors.InitLogError
@@ -73,7 +59,7 @@ func Init(file string) error {
 
     server, err := server.InitServer(conf, rlog)
     if err != nil {
-        rlog.Error("[Error] Init server failed")
+        rlog.Error("Init server failed")
 		time.Sleep(variable.DEFAULT_QUIT_WAIT_TIME)
         return err
     }
@@ -86,7 +72,7 @@ func GetConfig()(*config.Config) {
 	return api.config
 }
 
-func GetLog()(log.Log) {
+func GetLog()(logger.Log) {
 	return api.log
 }
 
@@ -113,11 +99,11 @@ func AddUsocketHandler(handler usocket.UsocketHandler) {
 	api.server.GetUsocketServer().AddHandler(handler)
 }
 
-func ReturnError(r *http.Request, w http.ResponseWriter, msg string, err error, log log.Log) {
+func ReturnError(r *http.Request, w http.ResponseWriter, msg string, err error, log logger.Log) {
 	hserver.ReturnError(r, w, msg, err, log)
 }
 
-func ReturnResponse(r *http.Request, w http.ResponseWriter, msg string, log log.Log) {
+func ReturnResponse(r *http.Request, w http.ResponseWriter, msg string, log logger.Log) {
 	hserver.ReturnResponse(r, w, msg, log)
 }
 
